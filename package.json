@@ -17,11 +17,14 @@
         "format": "node --experimental-strip-types node_modules/prettier/bin/prettier.cjs --write ."
     },
     "dependencies": {
+        "@ai-sdk/google": "^2.0.29",
         "@hono/zod-openapi": "^1.1.0",
         "@scalar/hono-api-reference": "^0.9.18",
         "@tsndr/cloudflare-worker-jwt": "^3.2.0",
+        "ai": "^5.0.89",
         "hono": "^4.9.7",
         "hono-openapi": "^1.0.7",
+        "jose": "^6.1.0",
         "zod": "^4.1.8"
     },
     "devDependencies": {
