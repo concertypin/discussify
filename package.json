@@ -19,6 +19,7 @@
     "dependencies": {
         "@hono/zod-openapi": "^1.1.0",
         "@scalar/hono-api-reference": "^0.9.18",
+        "@tsndr/cloudflare-worker-jwt": "^3.2.0",
         "hono": "^4.9.7",
         "hono-openapi": "^1.0.7",
         "zod": "^4.1.8"

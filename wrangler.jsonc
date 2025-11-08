@@ -8,6 +8,17 @@
     "env": {
         "prod": {
             "name": "",
-        },
-    },
+            "vars": {
+                "TURNSTILE_SECRET_KEY": "your-turnstile-secret-key",
+                "OPENAI_API_KEY": "your-openai-api-key",
+                "GITHUB_APP_ID": "your-github-app-id",
+                "GITHUB_APP_INSTALLATION_ID": "your-github-app-installation-id",
+                "GITHUB_REPOSITORY": "owner/repo",
+                "GITHUB_DISCUSSION_CATEGORY_ID": "your-github-discussion-category-id"
+            },
+            "secrets": [
+                "GITHUB_APP_PRIVATE_KEY"
+            ]
+        }
+    }
 }
