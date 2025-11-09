@@ -32,27 +32,41 @@ For a detailed and interactive API reference, please visit the `/docs` endpoint 
 
 ## Configuration
 
-This application is configured entirely through environment variables and secrets. Below is a detailed guide for setting up your `wrangler.jsonc` file.
+This application is configured entirely through environment variables and secrets. The method for setting them depends on whether you are running in a local development environment or deploying to production.
 
-### Environment Variables (`vars`)
+### Local Development
 
-| Variable                        | Description                                                                                                                              | Example                               |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `TURNSTILE_SECRET_KEY`          | The secret key for your Cloudflare Turnstile site.                                                                                       | `1x0000000000000000000000000000000AA` |
-| `GEMINI_API_KEY`                | Your API key for the Google Gemini Pro API.                                                                                              | `AIzaSy...`                           |
-| `GITHUB_APP_ID`                 | The App ID of your GitHub App.                                                                                                           | `123456`                              |
-| `GITHUB_APP_INSTALLATION_ID`    | The Installation ID for your GitHub App's installation in the target repository.                                                         | `12345678`                            |
-| `GITHUB_REPOSITORY`             | The full name of the repository where discussions will be created.                                                                       | `owner/repo-name`                     |
-| `GITHUB_DISCUSSION_CATEGORY_ID` | The GraphQL Node ID of the discussion category. [Learn how to find this ID](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions#finding-the-node-id-of-a-discussion-category). | `DIC_kwDO...`                         |
-| `ALLOWED_ORIGINS`               | A comma-separated list of origins that are allowed to make requests.                                                                     | `https://example.com,http://localhost:3000` |
+For local development using `wrangler dev`, you should create a `.dev.vars` file in the root of the project. Wrangler will automatically load all key-value pairs from this file as environment variables.
 
-### Secrets
+**Important:** The `.dev.vars` file is included in `.gitignore` by default and should never be committed to version control.
 
-| Secret                   | Description                                                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- |
-| `GITHUB_APP_PRIVATE_KEY` | The private key for your GitHub App, used to authenticate with the GitHub API. This should be kept secure. |
+**Example `.dev.vars` file:**
 
-### Example `wrangler.jsonc`
+```ini
+# Cloudflare Turnstile
+TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
+
+# Google Gemini API
+GEMINI_API_KEY="AIzaSy..."
+
+# GitHub App
+GITHUB_APP_ID="123456"
+GITHUB_APP_INSTALLATION_ID="12345678"
+GITHUB_REPOSITORY="owner/repo-name"
+GITHUB_DISCUSSION_CATEGORY_ID="DIC_kwDO..."
+GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n..."
+
+# CORS
+ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
+```
+
+### Production Deployment
+
+When deploying to your Cloudflare account, you should use a combination of `vars` in your `wrangler.jsonc` file for non-sensitive configuration and encrypted secrets for sensitive credentials.
+
+**1. Configure `wrangler.jsonc` (`vars`)**
+
+Add the non-sensitive variables to the `vars` section of your `wrangler.jsonc`.
 
 ```json
 {
@@ -60,22 +74,24 @@ This application is configured entirely through environment variables and secret
     "main": "src/index.ts",
     "compatibility_date": "2023-10-30",
     "vars": {
-        "TURNSTILE_SECRET_KEY": "your-turnstile-secret-key",
-        "GEMINI_API_KEY": "your-gemini-api-key",
-        "GITHUB_APP_ID": "your-github-app-id",
-        "GITHUB_APP_INSTALLATION_ID": "your-github-app-installation-id",
+        "GITHUB_APP_ID": "123456",
+        "GITHUB_APP_INSTALLATION_ID": "12345678",
         "GITHUB_REPOSITORY": "owner/repo",
-        "GITHUB_DISCUSSION_CATEGORY_ID": "your-github-discussion-category-id",
+        "GITHUB_DISCUSSION_CATEGORY_ID": "DIC_kwDO...",
         "ALLOWED_ORIGINS": "https://your-frontend-domain.com"
     }
 }
 ```
 
-To set the `GITHUB_APP_PRIVATE_KEY` secret, run the following command:
+**2. Set Production Secrets**
 
-```sh
-npx wrangler secret put GITHUB_APP_PRIVATE_KEY
-```
+The following values should be set as encrypted secrets using the Wrangler CLI.
+
+| Secret                   | Description                                                                                             | Command                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `TURNSTILE_SECRET_KEY`   | The secret key for your Cloudflare Turnstile site.                                                      | `wrangler secret put TURNSTILE_SECRET_KEY`        |
+| `GEMINI_API_KEY`         | Your API key for the Google Gemini Pro API.                                                             | `wrangler secret put GEMINI_API_KEY`              |
+| `GITHUB_APP_PRIVATE_KEY` | The private key for your GitHub App.                                                                    | `wrangler secret put GITHUB_APP_PRIVATE_KEY`      |
 
 ## License
 
