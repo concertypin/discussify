@@ -1,44 +1,58 @@
-import { Hono } from "hono";
-import { requestId } from "hono/request-id";
 import { cors } from "hono/cors";
-import helloRoute from "./route";
-import { openAPIRouteHandler } from "hono-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
+import { describeRoute, openAPIRouteHandler } from "hono-openapi";
+import { Hono } from "hono";
+import type { HonoType } from "./types";
+import { bodyLimit } from "hono/body-limit";
+import { csrf } from "hono/csrf";
+import { secureHeaders } from "hono/secure-headers";
+import feedback from "./route";
+let app = new Hono<HonoType>();
 
-type Bindings = {
-    // You can write your own bindings or env secret here.
-};
-
-let app = new Hono<{ Bindings: Bindings }>();
+app = app.use("*", cors());
 app = app.use(
-    requestId(),
-    cors({
-        origin: (origin, ctx) => {
-            // All origins are allowed in this example
-            if (import.meta.env.DEV) return origin;
-            else
-                throw new Error(
-                    "CORS is too permissive for production. Please restrict the origin."
-                );
-        },
-        credentials: true,
+    "*",
+    bodyLimit({
+        maxSize: 1024 * 2, // 2KB, feedback is all plaintext
+    })
+);
+app = app.use("*", (c, next) => {
+    const allowedOrigins = c.env.ALLOWED_ORIGINS.split(",").map((origin) =>
+        origin.trim()
+    );
+    return csrf({
+        origin: allowedOrigins,
+    })(c, next);
+});
+app = app.use(
+    "*",
+    secureHeaders({
+        strictTransportSecurity: false,
     })
 );
 
-app = app.route("/hello", helloRoute);
+app = app.get(
+    "/",
+    describeRoute({
+        description: "Oh hi",
+    }),
+    (c) => c.text("Oh hi! This is the Discussify API.")
+);
+app = app.route("/feedback", feedback);
 app = app.get(
     "/openapi.json",
     openAPIRouteHandler(app, {
-        includeEmptyPaths: true,
         documentation: {
             info: {
-                title: "Hono",
+                title: "Discussify API",
                 version: "1.0.0",
-                description: "API for greeting users",
+                description:
+                    "API for Discussify, a feedback collection tool using GitHub Discussions.",
             },
         },
-        exclude: ["/openapi.json", "/docs"],
     })
 );
+
 app = app.get("/docs", Scalar({ url: "/openapi.json" }));
+
 export default app;
