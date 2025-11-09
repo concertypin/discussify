@@ -26,39 +26,56 @@ Creates a new GitHub Discussion from the provided feedback.
 -   **Body:**
     -   Raw text of the user's feedback.
 
-#### Example Request
-
-```http
-POST /feedback HTTP/1.1
-Host: your-worker-url.com
-Content-Type: text/plain
-X-CF-Turnstile-Token: 0x4AAAAAAAC3M2VK4w7p48s
-
-The settings page is not loading correctly. It just shows a blank screen.
-```
-
-#### Success Response
-
--   **Code:** `200 OK`
--   **Content:**
-    ```json
-    {
-      "url": "https://github.com/your-org/your-repo/discussions/123"
-    }
-    ```
-
 ### Interactive Documentation
 
 For a detailed and interactive API reference, please visit the `/docs` endpoint of the deployed application.
 
 ## Configuration
 
-The application is configured through environment variables and secrets in the `wrangler.jsonc` file. You will need to provide keys for:
+This application is configured entirely through environment variables and secrets. Below is a detailed guide for setting up your `wrangler.jsonc` file.
 
--   Cloudflare Turnstile
--   Google Gemini API
--   GitHub App (ID, Installation ID, Private Key, Repository, and Discussion Category ID)
--   Allowed Origins for CORS
+### Environment Variables (`vars`)
+
+| Variable                        | Description                                                                                                                              | Example                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `TURNSTILE_SECRET_KEY`          | The secret key for your Cloudflare Turnstile site.                                                                                       | `1x0000000000000000000000000000000AA` |
+| `GEMINI_API_KEY`                | Your API key for the Google Gemini Pro API.                                                                                              | `AIzaSy...`                           |
+| `GITHUB_APP_ID`                 | The App ID of your GitHub App.                                                                                                           | `123456`                              |
+| `GITHUB_APP_INSTALLATION_ID`    | The Installation ID for your GitHub App's installation in the target repository.                                                         | `12345678`                            |
+| `GITHUB_REPOSITORY`             | The full name of the repository where discussions will be created.                                                                       | `owner/repo-name`                     |
+| `GITHUB_DISCUSSION_CATEGORY_ID` | The GraphQL Node ID of the discussion category. [Learn how to find this ID](https://docs.github.com/en/graphql/guides/using-the-graphql-api-for-discussions#finding-the-node-id-of-a-discussion-category). | `DIC_kwDO...`                         |
+| `ALLOWED_ORIGINS`               | A comma-separated list of origins that are allowed to make requests.                                                                     | `https://example.com,http://localhost:3000` |
+
+### Secrets
+
+| Secret                   | Description                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `GITHUB_APP_PRIVATE_KEY` | The private key for your GitHub App, used to authenticate with the GitHub API. This should be kept secure. |
+
+### Example `wrangler.jsonc`
+
+```json
+{
+    "name": "discussify",
+    "main": "src/index.ts",
+    "compatibility_date": "2023-10-30",
+    "vars": {
+        "TURNSTILE_SECRET_KEY": "your-turnstile-secret-key",
+        "GEMINI_API_KEY": "your-gemini-api-key",
+        "GITHUB_APP_ID": "your-github-app-id",
+        "GITHUB_APP_INSTALLATION_ID": "your-github-app-installation-id",
+        "GITHUB_REPOSITORY": "owner/repo",
+        "GITHUB_DISCUSSION_CATEGORY_ID": "your-github-discussion-category-id",
+        "ALLOWED_ORIGINS": "https://your-frontend-domain.com"
+    }
+}
+```
+
+To set the `GITHUB_APP_PRIVATE_KEY` secret, run the following command:
+
+```sh
+npx wrangler secret put GITHUB_APP_PRIVATE_KEY
+```
 
 ## License
 
