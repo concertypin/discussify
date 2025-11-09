@@ -36,7 +36,7 @@ This application is configured entirely through environment variables and secret
 
 ### Local Development
 
-For local development using `wrangler dev`, you should create a `.dev.vars` file in the root of the project. Wrangler will automatically load all key-value pairs from this file as environment variables.
+For local development, you should create a `.dev.vars` file in the root of the project. Wrangler will automatically load all key-value pairs from this file as environment variables.
 
 **Important:** The `.dev.vars` file is included in `.gitignore` by default and should never be committed to version control.
 
@@ -59,39 +59,24 @@ GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n..."
 # CORS
 ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000"
 ```
-
-### Production Deployment
-
-When deploying to your Cloudflare account, you should use a combination of `vars` in your `wrangler.jsonc` file for non-sensitive configuration and encrypted secrets for sensitive credentials.
-
-**1. Configure `wrangler.jsonc` (`vars`)**
-
-Add the non-sensitive variables to the `vars` section of your `wrangler.jsonc`.
-
-```json
-{
-    "name": "discussify",
-    "main": "src/index.ts",
-    "compatibility_date": "2023-10-30",
-    "vars": {
-        "GITHUB_APP_ID": "123456",
-        "GITHUB_APP_INSTALLATION_ID": "12345678",
-        "GITHUB_REPOSITORY": "owner/repo",
-        "GITHUB_DISCUSSION_CATEGORY_ID": "DIC_kwDO...",
-        "ALLOWED_ORIGINS": "https://your-frontend-domain.com"
+#### How to get Github Discussion ID
+Change `{OWNER}` and `{REPO}` with your repository's owner and name respectively, then run the following command in your terminal to list the discussion categories and their IDs:
+```bash
+gh api graphql -F owner={OWNER} -F repo={REPO} -f query='
+query($owner: String!, $repo: String!) {
+  repository(owner: $owner, name: $repo) {
+    discussionCategories(first: 20) {
+      nodes {
+        id
+        name
+      }
     }
+  }
 }
+'
 ```
-
-**2. Set Production Secrets**
-
-The following values should be set as encrypted secrets using the Wrangler CLI.
-
-| Secret                   | Description                                                                                             | Command                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `TURNSTILE_SECRET_KEY`   | The secret key for your Cloudflare Turnstile site.                                                      | `wrangler secret put TURNSTILE_SECRET_KEY`        |
-| `GEMINI_API_KEY`         | Your API key for the Google Gemini Pro API.                                                             | `wrangler secret put GEMINI_API_KEY`              |
-| `GITHUB_APP_PRIVATE_KEY` | The private key for your GitHub App.                                                                    | `wrangler secret put GITHUB_APP_PRIVATE_KEY`      |
+### Production Deployment
+When deploying to production using `wrangler publish`, you should set the required environment variables and secrets. Just use `wrangler secret bulk .prod.vars` to set multiple secrets at once from a file.
 
 ## License
 

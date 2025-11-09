@@ -2,6 +2,13 @@ export async function verifyTurnstile(
     secretKey: string,
     token: string
 ): Promise<void> {
+    if (!secretKey) {
+        //Bypass turnstile verification if no secret key is provided
+        console.warn(
+            "No Turnstile secret key provided, bypassing verification."
+        );
+        return;
+    }
     const formData = new FormData();
     formData.append("secret", secretKey);
     formData.append("response", token);

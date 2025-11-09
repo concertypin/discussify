@@ -40,3 +40,5 @@ worker-configuration.d.ts
 .env.local
 .env.*.local
 !.env
+
+!.vscode/settings.json

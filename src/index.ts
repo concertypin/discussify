@@ -1,15 +1,21 @@
-import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
-import { describeRoute, openAPIRouteHandler } from "hono-openapi";
 import { Hono } from "hono";
-import type { HonoType } from "./types";
 import { bodyLimit } from "hono/body-limit";
+import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
+import { describeRoute, openAPIRouteHandler } from "hono-openapi";
 import feedback from "./route";
+import type { HonoType } from "./types";
+
 let app = new Hono<HonoType>();
 
-app = app.use("*", cors());
+app = app.use("*", (c, next) => {
+    return cors({
+        origin: c.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim()),
+        allowHeaders: ["Content-Type", "Authorization", "X-CF-Turnstile-Token"],
+    })(c, next);
+});
 app = app.use(
     "*",
     bodyLimit({

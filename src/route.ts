@@ -1,8 +1,7 @@
-import { describeRoute, resolver, validator } from "hono-openapi";
-import z from "zod";
-
-import { handleFeedback } from "./feedback-handler";
 import { Hono } from "hono";
+import { describeRoute, resolver } from "hono-openapi";
+import z from "zod";
+import { handleFeedback } from "./feedback-handler";
 import type { HonoType } from "./types";
 
 let app = new Hono<HonoType>();
@@ -14,7 +13,13 @@ const feedbackRoute: Parameters<typeof describeRoute>["0"] = {
                 example: "Setting page is not loading properly.",
             },
         },
+        required: true,
     },
+    security: [
+        {
+            turnstile: [],
+        },
+    ],
     description: "Submit user feedback which creates a GitHub discussion.",
     responses: {
         200: {
@@ -60,39 +65,23 @@ const feedbackRoute: Parameters<typeof describeRoute>["0"] = {
     },
 };
 
-app = app.post(
-    "/",
-    describeRoute(feedbackRoute),
-    validator(
-        "header",
-        z.object({
-            "X-CF-Turnstile-Token": z
-                .string()
-                .describe("The Turnstile token from the client."),
-        })
-    ),
-    async (c) => {
-        const feedback = await c.req.text();
-        const turnstileToken = c.req.header("X-CF-Turnstile-Token");
+app = app.post("/", describeRoute(feedbackRoute), async (c) => {
+    const feedback = await c.req.text();
+    const turnstileToken = c.req.header("X-CF-Turnstile-Token");
 
-        if (!turnstileToken) {
-            return c.json({ error: "Turnstile token is missing." }, 400);
-        }
-        try {
-            const result = await handleFeedback(
-                c.env,
-                feedback,
-                turnstileToken
-            );
-            return c.json({ url: result });
-        } catch (error) {
-            const message =
-                error instanceof Error
-                    ? error.message
-                    : "An unknown error occurred.";
-            return c.json({ error: message }, 500);
-        }
+    if (!turnstileToken) {
+        return c.json({ error: "Turnstile token is missing." }, 400);
     }
-);
+    try {
+        const result = await handleFeedback(c.env, feedback, turnstileToken);
+        return c.json({ url: result });
+    } catch (error) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : "An unknown error occurred.";
+        return c.json({ error: message }, 500);
+    }
+});
 
 export default app;

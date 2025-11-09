@@ -1,4 +1,4 @@
-import { SignJWT, importPKCS8 } from "jose";
+import { createJwt } from "./crypto";
 
 interface InstallationTokenResponse {
     token: string;
@@ -22,19 +22,7 @@ interface CreateDiscussionData {
     };
 }
 
-async function createJwt(appId: string, privateKey: string): Promise<string> {
-    const pkcs8Key = await importPKCS8(privateKey, "RS256");
-
-    return await new SignJWT({})
-        .setProtectedHeader({ alg: "RS256", typ: "JWT" })
-        .setIssuer(appId)
-        .setIssuedAt(Math.floor(Date.now() / 1000) - 60)
-        .setExpirationTime(Math.floor(Date.now() / 1000) + 10 * 60)
-        .sign(pkcs8Key);
-}
-
 async function getInstallationAccessToken(
-    appId: string,
     installationId: string,
     jwt: string
 ): Promise<string> {
@@ -50,7 +38,7 @@ async function getInstallationAccessToken(
         }
     );
 
-    const data = await response.json<InstallationTokenResponse>();
+    const data = (await response.json()) satisfies InstallationTokenResponse;
     if (!data.token) {
         throw new Error(
             `Failed to get installation access token: ${JSON.stringify(data)}`
@@ -82,7 +70,8 @@ async function getRepositoryId(
             variables: { owner, repo },
         }),
     });
-    const data = await response.json<GraphQLResponse<RepositoryData>>();
+    const data =
+        (await response.json()) satisfies GraphQLResponse<RepositoryData>;
     return data.data.repository.id;
 }
 
@@ -96,7 +85,7 @@ export async function createGithubDiscussion(
     body: string
 ): Promise<string> {
     const jwt = await createJwt(appId, privateKey);
-    const token = await getInstallationAccessToken(appId, installationId, jwt);
+    const token = await getInstallationAccessToken(installationId, jwt);
     const repositoryId = await getRepositoryId(repository, token);
 
     const response = await fetch("https://api.github.com/graphql", {

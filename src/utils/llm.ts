@@ -1,8 +1,9 @@
-import triagePrompt from "../triage_prompt.md?raw";
-import refinePrompt from "../refine_prompt.md?raw";
-import z from "zod";
-import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import z from "zod";
+import refinePrompt from "../refine_prompt.md?raw";
+import triagePrompt from "../triage_prompt.md?raw";
+
 const priorityEnum = z
     .enum(["low", "medium", "high"])
     .describe(
@@ -21,7 +22,7 @@ const triageSchema = z.object({
     actionable: z
         .boolean()
         .describe(
-            "Indicates whether the feedback is actionable (true) or not (false)."
+            "Indicates whether the feedback is valid and actionable (true) or not (false)."
         ),
 });
 async function callLlm<T extends z.ZodType>({
@@ -64,6 +65,7 @@ export async function triageFeedback(
     apiKey: string,
     feedback: string
 ): Promise<boolean> {
+    console.log("Triage feedback:", feedback);
     const response = await callLlm({
         apiKey,
         prompt: triagePrompt,
@@ -72,6 +74,7 @@ export async function triageFeedback(
         think: true,
         // Light model is sufficient for triage... maybe? idk
     });
+    console.log("Triage response:", response);
     return response.actionable;
 }
 
@@ -79,6 +82,7 @@ export async function refineFeedback(
     apiKey: string,
     feedback: string
 ): Promise<{ title: string; body: string; priority: string }> {
+    console.log("Refine feedback:", feedback);
     const response = await callLlm({
         apiKey,
         prompt: refinePrompt,
@@ -87,6 +91,7 @@ export async function refineFeedback(
         think: true,
         model: "gemini-flash-latest", // More brain for refinement
     });
+    console.log("Refine response:", response);
     return {
         title: response.title,
         body: response.body,

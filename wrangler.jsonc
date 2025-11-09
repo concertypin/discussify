@@ -1,8 +1,11 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
     "upload_source_maps": true,
-    "name": "template",
-    "compatibility_date": "2025-08-03",
+    "name": "discussify",
+    "compatibility_date": "2025-09-06",
     "main": "./src/index.ts",
     "send_metrics": false,
+    "observability": {
+        "enabled": true
+    }
 }
