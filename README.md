@@ -1,72 +1,65 @@
-# Hono OpenAPI Template
+# Discussify
 
-- Information: This document is for both humans and AI to understand the project. If you need more details, make a [AGENTS.md](https://agents.md/) file.
-  Welcome to your super-cool Hono + OpenAPI starter! 🚀✨
+Discussify is a feedback collection service that automates the process of creating GitHub Discussions from user feedback. It is built to run on Cloudflare Workers and leverages a powerful AI-driven workflow to triage and refine submissions.
 
 ## Features
 
-- [Hono](https://hono.dev/) web framework
-- [OpenAPI](https://www.openapis.org/) documentation with [hono-openapi](https://honohub.dev/docs/openapi)
-- [Zod](https://zod.dev/) schema validation
-- [Scalar](https://github.com/scalar/scalar) API docs UI
-- Ready for Cloudflare Workers with Wrangler
+-   **Seamless Feedback Submission:** A simple `POST` endpoint for easy integration with any frontend application.
+-   **AI-Powered Triage:** Uses Google's Gemini Pro to intelligently determine if feedback is actionable, filtering out noise.
+-   **AI-Powered Refinement:** Automatically translates, polishes, and prioritizes feedback, generating a clean title and body for the discussion.
+-   **Secure GitHub Integration:** Authenticates using a GitHub App to create discussions on behalf of the application, not a user.
+-   **Spam Protection:** Integrated with Cloudflare Turnstile to prevent automated spam.
+-   **Secure by Design:** Includes CSRF protection, secure headers, and a configurable CORS policy.
+-   **Interactive API Documentation:** Provides a beautiful, interactive API reference powered by Scalar, available at the `/docs` endpoint.
 
-## Getting Started
+## API Reference
 
-```sh
-# Install dependencies
-pnpm install
+### Submit Feedback
 
-# Run the development server
-pnpm dev
+Creates a new GitHub Discussion from the provided feedback.
 
-# Format code
-pnpm format
+-   **Method:** `POST`
+-   **Endpoint:** `/feedback`
+-   **Headers:**
+    -   `Content-Type: text/plain`
+    -   `X-CF-Turnstile-Token: <Your-Turnstile-Token>`
+-   **Body:**
+    -   Raw text of the user's feedback.
 
-# Build the project
-pnpm build
+#### Example Request
+
+```http
+POST /feedback HTTP/1.1
+Host: your-worker-url.com
+Content-Type: text/plain
+X-CF-Turnstile-Token: 0x4AAAAAAAC3M2VK4w7p48s
+
+The settings page is not loading correctly. It just shows a blank screen.
 ```
 
-## API Endpoints
+#### Success Response
 
-Check out `/docs`. Generated docs are at `/docs`.
+-   **Code:** `200 OK`
+-   **Content:**
+    ```json
+    {
+      "url": "https://github.com/your-org/your-repo/discussions/123"
+    }
+    ```
 
-## Project Structure
+### Interactive Documentation
 
-```
-src/
-  index.ts      # Main app entry, don't make it messy!
-  route.ts      # API routes, make changes here
-public/         # Static assets
-```
+For a detailed and interactive API reference, please visit the `/docs` endpoint of the deployed application.
+
+## Configuration
+
+The application is configured through environment variables and secrets in the `wrangler.jsonc` file. You will need to provide keys for:
+
+-   Cloudflare Turnstile
+-   Google Gemini API
+-   GitHub App (ID, Installation ID, Private Key, Repository, and Discussion Category ID)
+-   Allowed Origins for CORS
 
 ## License
 
-Apache-2.0, see [LICENSE](./LICENSE) for details.
-
-## Code Style Guide 🦄✨
-
-To keep our code super neat and sparkly, please follow these rules:
-
-- **JavaScript:**
-    - Avoid. Use TypeScript instead!
-    - If you must, follow the same rules as TypeScript.
-    - Use JSDoc comments, especially for functions.
-    - Do not use common types like `Object`, `Any`. Use specific types.
-
-- **TypeScript:**
-    - Name files and folders in `kebab-case`.
-    - Use `camelCase` for variables and functions, `PascalCase` for classes and types.
-    - Write JSDoc comments as much as possible. Especially, add comments `@fires` and `@listens` for event-related functions.
-
-- **Hono:**
-    - MAKE a schema for each endpoint. Check out the route.ts file for examples. It is needed for generating OpenAPI docs.
-    - Use middleware for common tasks like authentication, logging, etc.
-    - Keep route handlers focused on a single task. We got the serverless power!
-- **Commit Messages:**
-    - Use Conventional Commits style. Check out [conventionalcommits.org](https://www.conventionalcommits.org/en/v1.0.0/) for details.
-
-- **Review:**
-    - PRs should be reviewed by at least one friend(AI friend is friend too) before merging!
-
-Let’s keep everything tidy and readable so everyone can enjoy coding together~! (｡•̀ᴗ-)✧
+This project is licensed under the Apache-2.0 License. See the [LICENSE](./LICENSE) file for details.
